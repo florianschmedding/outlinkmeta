@@ -1,0 +1,8 @@
+*.class
+
+.project
+.settings
+.classpath
+target
+.idea
+*~
