@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.averbis.eucases.outlinkmeta.nutch.common.AbstractOutlinkMeta;
+import de.averbis.eucases.outlinkmeta.nutch.util.NutchFieldComparer;
 
 public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements ScoringFilter {
 
@@ -182,7 +183,7 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 	@Override
 	public void updateDbScore(Text url, CrawlDatum old, CrawlDatum datum, List<CrawlDatum> inlinked) throws ScoringFilterException {
 
-		// TODO: Check if datum or old contain the metadata already and do no trigger re-fetch if nothing changed.
+		boolean newDataReceived = false;
 
 		for (CrawlDatum inlink : inlinked) {
 
@@ -193,7 +194,7 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 			}
 			if (!(outlinkWritable instanceof NutchField)) {
 				// All fields added by outlinkmeta have type NutchField
-				OutlinkMetaScoringFilter.logger.warn("Field {} should have type NutchField but has type {}", this.getUrlField(), outlinkWritable.getClass().getCanonicalName());
+				OutlinkMetaScoringFilter.logger.error("Field {} should have type NutchField but has type {}", this.getUrlField(), outlinkWritable.getClass().getCanonicalName());
 				continue;
 			}
 
@@ -209,16 +210,28 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 						// Null values (and keys) must never be added to Mapwritable because it calls getClass() on it.
 						continue;
 					}
+					if (!(value instanceof NutchField)) {
+						// All fields added by outlinkmeta have type NutchField
+						OutlinkMetaScoringFilter.logger.error("Field {} should have type NutchField but has type {}", field, value.getClass().getCanonicalName());
+						continue;
+					}
+					if ((new NutchFieldComparer((NutchField) value)).equals(datum.getMetaData().get(new Text(field)))) {
+						// If the same data is already present nothing has to be done.
+						continue;
+					}
 					datum.getMetaData().put(new Text(field), value);
+					newDataReceived = true;
 				}
-				datum.setFetchTime(System.currentTimeMillis());
-				// the following is not necessary to trigger the fetch
-				// datum.setStatus(CrawlDatum.STATUS_DB_UNFETCHED);
-				// datum.setRetriesSinceFetch(0);
-				// datum.setSignature(null);
-				// datum.setModifiedTime(0L);
 			}
+		}
 
+		if (newDataReceived) {
+			datum.setFetchTime(System.currentTimeMillis());
+			// the following is not necessary to trigger the fetch
+			// datum.setStatus(CrawlDatum.STATUS_DB_UNFETCHED);
+			// datum.setRetriesSinceFetch(0);
+			// datum.setSignature(null);
+			// datum.setModifiedTime(0L);
 		}
 
 		return;
