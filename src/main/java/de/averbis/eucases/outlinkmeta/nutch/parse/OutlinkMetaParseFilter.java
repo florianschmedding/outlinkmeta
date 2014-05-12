@@ -27,7 +27,6 @@ import java.net.URL;
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.indexer.NutchField;
@@ -148,21 +147,6 @@ public class OutlinkMetaParseFilter extends AbstractOutlinkMeta implements HtmlP
 		Outlink[] extendedOutlinks = Arrays.copyOf(outlinks, outlinks.length + 1);
 		extendedOutlinks[extendedOutlinks.length - 1] = outlink;
 		return extendedOutlinks;
-	}
-
-
-	@Override
-	public void setConf(Configuration conf) {
-
-		super.setConf(conf);
-
-	}
-
-
-	@Override
-	public Configuration getConf() {
-
-		return super.getConf();
 	}
 
 

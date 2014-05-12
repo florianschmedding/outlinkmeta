@@ -21,11 +21,12 @@
 
 package de.averbis.eucases.outlinkmeta.nutch.common;
 
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractOutlinkMeta {
+public abstract class AbstractOutlinkMeta implements Configurable {
 
 	private final static Logger logger = LoggerFactory.getLogger(AbstractOutlinkMeta.class);
 
@@ -82,12 +83,14 @@ public abstract class AbstractOutlinkMeta {
 	}
 
 
+	@Override
 	public Configuration getConf() {
 
 		return this.conf;
 	}
 
 
+	@Override
 	public void setConf(Configuration conf) {
 
 		this.conf = conf;

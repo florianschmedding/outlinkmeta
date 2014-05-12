@@ -22,7 +22,6 @@
 
 package de.averbis.eucases.outlinkmeta.nutch.indexer;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.Inlinks;
@@ -45,21 +44,6 @@ public class OutlinkMetaIndexingFilter extends AbstractOutlinkMeta implements In
 	public OutlinkMetaIndexingFilter() {
 
 		super();
-	}
-
-
-	@Override
-	public void setConf(Configuration conf) {
-
-		super.setConf(conf);
-
-	}
-
-
-	@Override
-	public Configuration getConf() {
-
-		return super.getConf();
 	}
 
 

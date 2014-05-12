@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.nutch.crawl.CrawlDatum;
@@ -183,6 +182,8 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 	@Override
 	public void updateDbScore(Text url, CrawlDatum old, CrawlDatum datum, List<CrawlDatum> inlinked) throws ScoringFilterException {
 
+		// TODO: Check if datum or old contain the metadata already and do no trigger re-fetch if nothing changed.
+
 		for (CrawlDatum inlink : inlinked) {
 
 			Writable outlinkWritable = inlink.getMetaData().get(new Text(this.getUrlField()));
@@ -241,21 +242,6 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 	public float indexerScore(Text url, NutchDocument doc, CrawlDatum dbDatum, CrawlDatum fetchDatum, Parse parse, Inlinks inlinks, float initScore) throws ScoringFilterException {
 
 		return initScore;
-	}
-
-
-	@Override
-	public void setConf(Configuration conf) {
-
-		super.setConf(conf);
-
-	}
-
-
-	@Override
-	public Configuration getConf() {
-
-		return super.getConf();
 	}
 
 }

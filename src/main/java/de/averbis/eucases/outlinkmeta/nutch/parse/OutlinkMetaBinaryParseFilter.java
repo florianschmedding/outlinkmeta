@@ -23,7 +23,6 @@ package de.averbis.eucases.outlinkmeta.nutch.parse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.nutch.parse.HTMLMetaTags;
 import org.apache.nutch.parse.HtmlParseFilter;
 import org.apache.nutch.parse.ParseResult;
@@ -38,20 +37,6 @@ public class OutlinkMetaBinaryParseFilter extends AbstractOutlinkMeta implements
 	public OutlinkMetaBinaryParseFilter() {
 
 		super();
-	}
-
-
-	@Override
-	public void setConf(Configuration conf) {
-
-		super.setConf(conf);
-	}
-
-
-	@Override
-	public Configuration getConf() {
-
-		return super.getConf();
 	}
 
 
