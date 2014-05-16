@@ -15,6 +15,8 @@ import java.util.Map.Entry;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.nutch.crawl.CrawlDatum;
+import org.apache.nutch.crawl.FetchSchedule;
+import org.apache.nutch.crawl.FetchScheduleFactory;
 import org.apache.nutch.crawl.Inlinks;
 import org.apache.nutch.indexer.NutchDocument;
 import org.apache.nutch.indexer.NutchField;
@@ -226,12 +228,8 @@ public class OutlinkMetaScoringFilter extends AbstractOutlinkMeta implements Sco
 		}
 
 		if (newDataReceived) {
-			datum.setFetchTime(System.currentTimeMillis());
-			// the following is not necessary to trigger the fetch
-			// datum.setStatus(CrawlDatum.STATUS_DB_UNFETCHED);
-			// datum.setRetriesSinceFetch(0);
-			// datum.setSignature(null);
-			// datum.setModifiedTime(0L);
+			FetchSchedule schedule = FetchScheduleFactory.getFetchSchedule(this.getConf());
+			schedule.forceRefetch(url, datum, true);
 		}
 
 		return;
