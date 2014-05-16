@@ -26,6 +26,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.DocumentFragment;
 
 import de.averbis.eucases.outlinkmeta.nutch.common.AbstractOutlinkMeta;
+import de.averbis.eucases.outlinkmeta.nutch.common.OutlinkMetaConfig;
 
 public class OutlinkMetaParseFilter extends AbstractOutlinkMeta implements HtmlParseFilter {
 
@@ -57,23 +59,55 @@ public class OutlinkMetaParseFilter extends AbstractOutlinkMeta implements HtmlP
 	@Override
 	public ParseResult filter(Content content, ParseResult parseResult, HTMLMetaTags metaTags, DocumentFragment node) {
 
-		if (!this.shouldProcess(content, parseResult)) {
-			// OutlinkMetaParseFilter.logger.info("Not processing {}", content.getUrl());
+		Parse parse = parseResult.get(content.getUrl());
+
+		if (!this.shouldProcess(content, parse)) {
+			OutlinkMetaParseFilter.logger.debug("Not processing {}", content.getUrl());
 			return parseResult;
 		}
 
 		OutlinkMetaParseFilter.logger.info("Processing {}", content.getUrl());
 
-		Parse parse = parseResult.get(content.getUrl());
+		if (this.getIndexBinary() && this.isOutlinkTarget(content)) {
+			this.addBinaryContentToParseMetadata(parse, content.getContent());
+		}
+
+		if (this.isOutlinkSource(parse)) {
+			this.addParseMetadataToOutlink(content.getBaseUrl(), parse);
+		}
+
+		return parseResult;
+	}
+
+
+	/**
+	 * Put the base64 encoded binary content into the parse metadata.
+	 * 
+	 * @param parse
+	 * @param content
+	 */
+	private void addBinaryContentToParseMetadata(Parse parse, byte[] content) {
+
+		// If outlinkmeta is configured to provide the binary content for indexing and the url field is present
+		// in the content metadata (see OutlinkMetaScoringFilter) then put the base64-encoded content to the parse metadata.
+		parse.getData().getParseMeta().add(OutlinkMetaConfig.BINARY_CONTENT, Base64.encodeBase64String(content));
+	}
+
+
+	/**
+	 * 
+	 * @param baseUrl
+	 * @param parse
+	 */
+	private void addParseMetadataToOutlink(String baseUrl, Parse parse) {
+
 		Metadata metadata = parse.getData().getParseMeta();
-
 		MapWritable annotations = this.createOutlinkAnnotations(metadata);
-
 		String url = metadata.get(this.getUrlField());
+
 		try {
 			// make metadata url absolute
-			URL baseUrl = new URL(content.getBaseUrl());
-			url = (new URL(baseUrl, url)).toString();
+			url = (new URL(new URL(baseUrl), url)).toString();
 			// update url in metadata (not really necessary because URL gets replaced in OutlinkMetaScroringFilter.initialScore())
 			metadata.set(this.getUrlField(), url);
 			Outlink annotatedOutlink = this.createAnnotatedOutlink(url, this.getUrlDescription(), annotations);
@@ -82,8 +116,6 @@ public class OutlinkMetaParseFilter extends AbstractOutlinkMeta implements HtmlP
 		} catch (MalformedURLException e) {
 			OutlinkMetaParseFilter.logger.warn("Malformed outlink url: {}", url);
 		}
-
-		return parseResult;
 	}
 
 
@@ -151,17 +183,46 @@ public class OutlinkMetaParseFilter extends AbstractOutlinkMeta implements HtmlP
 
 
 	/**
-	 * Check whether the document should be processed. A document should be processed if the metadata contain a value for the key name in OutlinkMetaConfig.URL_FIELD.
+	 * Check whether the document should be processed.
 	 * 
 	 * @param content
 	 * @param parseResult
 	 * @return True if the document should be processed.
 	 */
-	private boolean shouldProcess(Content content, ParseResult parseResult) {
+	private boolean shouldProcess(Content content, Parse parse) {
 
-		Parse parse = parseResult.get(content.getUrl());
-		Metadata metadata = parse.getData().getParseMeta();
-		return StringUtils.isNotEmpty(metadata.get(this.getUrlField()));
+		return this.isOutlinkSource(parse) || this.isOutlinkTarget(content);
+
+	}
+
+
+	/**
+	 * Check if the current document is the target of an outlink that was created by outlinkmeta. This is the case if the content metadata contain a value for the key name in
+	 * OutlinkMetaConfig.URL_FIELD.
+	 * 
+	 * The content metadata are modified by the ScoringFilter (passScoreBeforeParsing) of the outlinkmeta plugin.
+	 * 
+	 * @param content
+	 * @return true if the document is a target
+	 */
+	private boolean isOutlinkTarget(Content content) {
+
+		return StringUtils.isNotEmpty(content.getMetadata().get(this.getUrlField()));
+	}
+
+
+	/**
+	 * Check if the current document is the source of an outlink that should be created by outlinkmeta. This is the case if the parse metadata contain a value for the key name in
+	 * OutlinkMetaConfig.URL_FIELD.
+	 * 
+	 * The parse metadata are supposed to be added before the outlinkmeta plugin receives the document.
+	 * 
+	 * @param parse
+	 * @return true if the document is a source
+	 */
+	private boolean isOutlinkSource(Parse parse) {
+
+		return StringUtils.isNotEmpty(parse.getData().getParseMeta().get(this.getUrlField()));
 	}
 
 }

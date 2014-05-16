@@ -57,10 +57,40 @@ public class OutlinkMetaIndexingFilter extends AbstractOutlinkMeta implements In
 		}
 		OutlinkMetaIndexingFilter.logger.info("Processing document {}", url.toString());
 
+		if (this.getIndexBinary()) {
+			this.addBinaryContent(doc, parse);
+		}
+
+		this.addMetadata(doc, datum);
+
+		return doc;
+	}
+
+
+	/**
+	 * Add the binary content that was added to the parse metadata by the indexing filter to the Nutch document. If the binary content is not present in the parse metadata nothing
+	 * will be changed.
+	 * 
+	 * @param doc
+	 *            (a field is added if the binary content is present)
+	 * @param parse
+	 */
+	private void addBinaryContent(NutchDocument doc, Parse parse) {
+
 		String binary = parse.getData().getParseMeta().get(OutlinkMetaConfig.BINARY_CONTENT);
 		if (binary != null) {
 			doc.add(OutlinkMetaConfig.BINARY_CONTENT, binary);
 		}
+	}
+
+
+	/**
+	 * Add the metadata from the original outlink to the current document to the Nutch document. The metadata is stored in the CrawlDatum.
+	 * 
+	 * @param doc
+	 * @param datum
+	 */
+	private void addMetadata(NutchDocument doc, CrawlDatum datum) {
 
 		for (String field : this.getFields()) {
 			Object value = datum.getMetaData().get(new Text(field));
@@ -76,9 +106,8 @@ public class OutlinkMetaIndexingFilter extends AbstractOutlinkMeta implements In
 			} else if (value != null) {
 				OutlinkMetaIndexingFilter.logger.warn("Field {} should have type NutchField but has type {}", field, value.getClass().getCanonicalName());
 			}
-			// if value is null the field is not set - skip it
+			// skip the field if value is null the field is not set
 		}
-		return doc;
 	}
 
 

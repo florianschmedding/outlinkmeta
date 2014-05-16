@@ -35,14 +35,7 @@
      <implementation id="outlinkmeta-parse"
          class="de.averbis.eucases.outlinkmeta.nutch.parse.OutlinkMetaParseFilter"/>
    </extension>
-   
-   <extension id="de.averbis.eucases.outlinkmeta.nutch.binary-parse"
-       name="OutlinkMeta Binary Parse Filter"
-       point="org.apache.nutch.parse.HtmlParseFilter">
-     <implementation id="outlinkmeta-binary-parse"
-         class="de.averbis.eucases.outlinkmeta.nutch.parse.OutlinkMetaBinaryParseFilter"/>
-   </extension>
-   
+      
    <extension id="de.averbis.eucases.outlinkmeta.nutch.indexer"
        name="OutlinkMeta Indexing Filter"
        point="org.apache.nutch.indexer.IndexingFilter">
